@@ -1,0 +1,70 @@
+service: eve-military
+
+provider:
+  name: aws
+  stage: ${opt:stage, 'dev'}
+  runtime: python3.6
+  region: us-east-1
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:PutItem
+        - dynamodb:Scan
+        - dynamodb:Query
+      Resource:
+        - "${self:custom.table.fittings}"
+        - "${self:custom.table.doctrines}"
+
+custom:
+  table:
+    fittings: { "Fn::Join": [":", ["arn:aws:dynamodb:${self:provider.region}", { "Ref": "AWS::AccountId" }, "table/corp-fittings-fittings" ] ]  }
+    doctrines: { "Fn::Join": [":", ["arn:aws:dynamodb:${self:provider.region}", { "Ref": "AWS::AccountId" }, "table/corp-fittings-doctrines" ] ]  }
+  pythonRequirements:
+    pythonBin: python3
+
+
+plugins:
+  - serverless-python-requirements
+
+functions:
+  putDoctrine:
+    handler: put_doctrine.handle
+    events:
+      - http:
+          path: doctrines
+          method: put
+  putFitting:
+    handler: put_fitting.handle
+    events:
+      - http:
+          path: fittings
+          method: put
+  getDoctrine:
+    handler: get_doctrine.handle
+    events:
+      - http:
+          path: doctrines/{name}
+          method: get
+  getFitting:
+    handler: get_fitting.handle
+    events:
+      - http:
+          path: fittings/{name}
+          method: get
+  getAllDoctrines:
+    handler: get_all_doctrines.handle
+    events:
+      - http:
+          path: doctrines
+          method: get
+  getMarketWatchInfo:
+    handler: get_market_watch_info.handle
+    events:
+      - http:
+          path: marketwach
+          method: get
+
+package:
+  exclude:
+    - venv/**
+    - node_modules/**
